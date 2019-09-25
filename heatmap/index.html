@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+	<head>
+		<meta charset="utf-8">
+	</head>
+	<body style="height: 100%; margin: 0">
+		<div id="container" style="height: 100%"></div>
+		<script src="./js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./js/echarts.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			//获取参数---从路径传递
+			function getQueryVariable(variable){
+				 var query = window.location.search.substring(1);
+				 var vars = query.split("&");
+				 for (var i=0;i<vars.length;i++) {
+						  var pair = vars[i].split("=");
+						  if(pair[0] == variable){return pair[1];}
+				 }
+				 return(false);
+		   }
+			
+			
+			
+			var JsonUrl=getQueryVariable("jsonUrl");
+				JsonUrl="./jsonFile/jtzy.json"; //地图json地址
+				
+			var reqUer=getQueryVariable("GetUrl"); //请求数据接口地址--
+			
+			var styleJson="";
+			var chartStyle=getQueryVariable("chartStyle");
+			if(chartStyle==undefined||chartStyle==null || chartStyle==""){
+				styleJson={
+					color:'#fff'
+				}
+			}else{
+				styleJson=JSON.parse(chartStyle);
+			}
+				
+			
+			var myChart = echarts.init(document.getElementById('container')); 
+			var option=null;
+			$.get(JsonUrl, function(geoJson) {
+				echarts.registerMap('beijing', geoJson); //注册地图
+				
+				var geoCoordMap = {  
+					"坐标1": [116.38256192207339,40.07571530019429],
+					"坐标2": [116.38315200805663,40.07542796202513],
+					"坐标3": [116.38257265090942,40.0742211284754],
+					"坐标4": [116.38445019721983,40.07405693178185],
+					"坐标5": [ 116.38242244720459,40.07541154266456],
+				};
+
+				 var convertData = function (data) {
+					var res = [];
+					for (var i = 0; i < data.length; i++) {
+						var geoCoord = geoCoordMap[data[i].name];
+						if (geoCoord) {
+							res.push({
+							    name: data[i].name,
+							    value: geoCoord.concat(data[i].value)
+							});
+						}
+					}
+					console.log(res);
+					return res;
+				};
+
+				option = {
+					title: {
+						text: '测试地图',
+						left: 'center',
+						textStyle: {
+						    color: '#fff'
+						}
+					},
+					tooltip: {
+						trigger: 'item',
+						formatter: function (params) {
+							console.log(params);
+							return params.name + ' : ' + params.value[2];
+						}
+					},
+					legend: {
+						orient: 'vertical',
+						y: 'bottom',
+						x:'right',
+						data:['pm2.5'],
+						textStyle: {
+							color: '#fff'
+						}
+					},
+					backgroundColor: '#404a59',
+					visualMap: {
+						// type: 'piecewise',
+						min: 0,
+						max: 500,
+						calculable: true,
+						realtime: true,
+						inRange: {
+							color: ['#d94e5d', '#eac736', '#50a3ba'].reverse()
+						},
+						inverse: true, //是否反转 visualMap 组件
+						textStyle: {
+							color: '#fff'
+						}
+					},
+					geo: {
+						map: 'beijing',
+						label: {
+							normal: {
+								show: true,
+								color:'#fff'
+							},
+							emphasis: {
+								show: false,
+								color:'#fff'
+							}
+							// color:'#fff'
+						},
+						itemStyle: {
+							normal: {
+								areaColor: '#323c48',
+								borderColor: '#111'
+							},
+							emphasis: {
+								areaColor: '#2a333d'
+							}
+						}
+					},
+					series: [{
+						// scatter  heatmap
+							name: 'pm2.5',
+							type: 'scatter',
+							coordinateSystem: 'geo',
+							symbolSize:12,   //数据点大小
+							roam: true,		//是否可以
+							 label: {
+							    normal: {
+							        show: false
+							    },
+							    emphasis: {
+							        show: false
+							    }
+							},
+							itemStyle: {
+							    emphasis: {
+							        borderColor: '#fff',
+							        borderWidth: 1
+							    }
+							},
+							// 文本位置修正
+							textFixed: {
+							    Alaska: [20, -20]
+							},
+							data: convertData([
+								{name: "坐标1",value: 450},
+								{name: "坐标2",value: 320},
+								{name: "坐标3",value: 480},
+								{name: "坐标4",value: 490},
+								{name: "坐标5",value: 500}
+							])
+						}
+					]
+				}
+				myChart.setOption(option);
+			});
+			// if (option && typeof option === "object") {
+			//     myChart.setOption(option, true);
+			// }
+		</script>
+	</body>
+</html>
